@@ -141,15 +141,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
         switch(keycode)
         {
             case RGB_EFFECT_MATRIX_SOLID_REACTIVE:
-                rgblight_mode(RGB_MATRIX_SOLID_REACTIVE);
+                rgb_matrix_mode(RGB_MATRIX_SOLID_REACTIVE);
                 break;
 
             case RGB_EFFECT_MATRIX_TYPING_HEATMAP:
-                rgblight_mode(RGB_MATRIX_TYPING_HEATMAP);
+                rgb_matrix_mode(RGB_MATRIX_TYPING_HEATMAP);
                 break;
 
             case RGB_EFFECT_MATRIX_CYCLE_UP_DOWN:
-                rgblight_mode(RGB_MATRIX_CYCLE_UP_DOWN);
+                rgb_matrix_mode(RGB_MATRIX_CYCLE_UP_DOWN);
                 break;
 
             case RGB_TOGGLE_IDLE_ANIMATION_SLIDESHOW:
@@ -181,11 +181,12 @@ void change_rgb_effect(void)
     }
     while(IS_UNWANTED_MODE(current_rgb_mode));
 
-    rgblight_mode_noeeprom(current_rgb_mode);
+    rgb_matrix_mode_noeeprom(current_rgb_mode);
 }
 
 // The function to be called every 10ms in the QMK main loop
-void matrix_scan_user(void) {
+void housekeeping_task_user(void)
+{
     if(user_config.rgb_enable_idle_animation || rgb_enable_animation_slideshow_no_wait_time)
     {
         rgb_enable_animation_slideshow_no_wait_time = false;
@@ -197,7 +198,6 @@ void matrix_scan_user(void) {
                 change_rgb_effect();
                 change_animation_timer = timer_read32(); // Reset the timer after the change
             }
-
         }
         else
         {
