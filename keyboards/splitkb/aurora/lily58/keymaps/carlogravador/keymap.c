@@ -13,11 +13,68 @@
  * edit it directly.
  */
 
-enum layers {
+
+// Define the custom keycode
+enum custom_keycodes
+{
+    RGB_EFFECT_MATRIX_SOLID_REACTIVE = SAFE_RANGE,
+    RGB_EFFECT_MATRIX_TYPING_HEATMAP,
+    RGB_EFFECT_MATRIX_CYCLE_UP_DOWN,
+    RGB_TOGGLE_IDLE_ANIMATION_SLIDESHOW
+};
+
+#define INACTIVITY_TIMEOUT                (900 * 1000) // In MS
+#define CHANGE_ANIMATION_TIMEOUT          (5 * 1000) // In MS
+
+// RGB MODE EFFECTS KEYCODES
+#define RM_EFF1     RGB_EFFECT_MATRIX_SOLID_REACTIVE
+#define RM_EFF2     RGB_EFFECT_MATRIX_TYPING_HEATMAP
+#define RM_EFF3     RGB_EFFECT_MATRIX_CYCLE_UP_DOWN
+#define RM_TIDL     RGB_TOGGLE_IDLE_ANIMATION_SLIDESHOW
+
+// Define the unwanted modes (to be skipped)
+#define IS_UNWANTED_MODE(mode) ((mode) == RGB_MATRIX_NONE || \
+                                (mode) == RGB_MATRIX_SOLID_COLOR || \
+                                (mode) == RGB_MATRIX_GRADIENT_UP_DOWN || \
+                                (mode) == RGB_MATRIX_GRADIENT_LEFT_RIGHT || \
+                                (mode) == RGB_MATRIX_TYPING_HEATMAP || \
+                                (mode) == RGB_MATRIX_SOLID_REACTIVE_SIMPLE || \
+                                (mode) == RGB_MATRIX_SOLID_REACTIVE || \
+                                (mode) == RGB_MATRIX_SOLID_REACTIVE_WIDE || \
+                                (mode) == RGB_MATRIX_SOLID_REACTIVE_MULTIWIDE || \
+                                (mode) == RGB_MATRIX_SOLID_REACTIVE_CROSS || \
+                                (mode) == RGB_MATRIX_SOLID_REACTIVE_MULTICROSS || \
+                                (mode) == RGB_MATRIX_SOLID_REACTIVE_NEXUS || \
+                                (mode) == RGB_MATRIX_SOLID_REACTIVE_MULTINEXUS || \
+                                (mode) == RGB_MATRIX_SPLASH || \
+                                (mode) == RGB_MATRIX_MULTISPLASH || \
+                                (mode) == RGB_MATRIX_SOLID_SPLASH || \
+                                (mode) == RGB_MATRIX_SOLID_MULTISPLASH)
+
+enum layers
+{
     _DEFAULT = 0,
     _RAISE,
     _RGB_EFFECT
 };
+
+typedef union
+{
+    uint32_t raw;
+    struct
+    {
+        bool     rgb_enable_idle_animation :1;
+    };
+} user_config_t;
+
+user_config_t user_config;
+
+// Timer variable to track inactivity
+static uint32_t idle_timer = 0;
+static uint32_t change_animation_timer = 0;
+static bool idle = false;
+
+static uint8_t current_rgb_mode = RGB_MATRIX_CYCLE_UP_DOWN;           // Start at RGB_MATRIX_CYCLE_UP_DOWN
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_DEFAULT] = LAYOUT(
@@ -35,7 +92,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                    _______, _______, MO(2)  , _______, _______, _______, _______, _______
     ),
     [_RGB_EFFECT] = LAYOUT(
-        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   RM_TOGG, RM_HUEU, RM_SATU, RM_VALU, RM_SPDU, XXXXXXX,
+        RM_TIDL, RM_EFF1, RM_EFF2, RM_EFF3, XXXXXXX, XXXXXXX,                   RM_TOGG, RM_HUEU, RM_SATU, RM_VALU, RM_SPDU, XXXXXXX,
         XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   RM_NEXT, RM_HUED, RM_SATD, RM_VALD, RM_SPDD, XXXXXXX,
         XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   RM_PREV, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
         XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
@@ -44,9 +101,105 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 
-void keyboard_pre_init_user(void) {
+// Disable MCU LED. It is used as CAPSLOCK indicator instead. See config.h
+void keyboard_pre_init_user(void)
+{
     gpio_set_pin_output(LED_CAPS_LOCK_PIN);
     gpio_write_pin_high(LED_CAPS_LOCK_PIN);
+}
+
+void keyboard_post_init_user(void)
+{
+    // Read the user config from EEPROM
+    user_config.raw = eeconfig_read_user();
+}
+void eeconfig_init_user(void)
+{
+    // EEPROM is getting reset!
+    user_config.raw = 0;
+    user_config.rgb_enable_idle_animation = true; // We want this enabled by default
+    eeconfig_update_user(user_config.raw); // Write default value to EEPROM now
+}
+
+// Define what happens when the custom key is pressed
+bool process_record_user(uint16_t keycode, keyrecord_t *record)
+{
+    if(record->event.pressed)
+    {
+        // Reset the idle timer on key press
+        idle_timer = timer_read();
+        if(idle)
+        {
+            rgb_matrix_reload_from_eeprom();
+            idle = false;
+        }
+
+        // Add custom behavior for other keycodes if needed
+        switch(keycode)
+        {
+            case RGB_EFFECT_MATRIX_SOLID_REACTIVE:
+                rgblight_mode(RGB_MATRIX_SOLID_REACTIVE);
+                break;
+
+            case RGB_EFFECT_MATRIX_TYPING_HEATMAP:
+                rgblight_mode(RGB_MATRIX_TYPING_HEATMAP);
+                break;
+
+            case RGB_EFFECT_MATRIX_CYCLE_UP_DOWN:
+                rgblight_mode(RGB_MATRIX_CYCLE_UP_DOWN);
+                break;
+
+            case RGB_TOGGLE_IDLE_ANIMATION_SLIDESHOW:
+                user_config.rgb_enable_idle_animation = !user_config.rgb_enable_idle_animation;
+                eeconfig_update_user(user_config.raw);
+                break;
+
+            default:
+                return true; // Return true to allow normal processing for other keycodes
+        }
+    }
+
+    return true;
+}
+
+// Function to change the RGB effect
+void change_rgb_effect(void)
+{
+    // Increment the mode index and check if it’s unwanted
+    do
+    {
+        current_rgb_mode = (current_rgb_mode + 1) % RGB_MATRIX_EFFECT_MAX;
+    }
+    while(IS_UNWANTED_MODE(current_rgb_mode));
+
+    rgblight_mode_noeeprom(current_rgb_mode);
+}
+
+// The function to be called every 10ms in the QMK main loop
+void matrix_scan_user(void) {
+    if(user_config.rgb_enable_idle_animation)
+    {
+        if(idle)
+        {
+            if(timer_elapsed(change_animation_timer) > CHANGE_ANIMATION_TIMEOUT)
+            {
+                // Change the RGB effect every CHANGE_ANIMATION_TIMEOUT when idle is detected
+                change_rgb_effect();
+                change_animation_timer = timer_read(); // Reset the timer after the change
+            }
+
+        }
+        else
+        {
+            // Check if 60 seconds (1 minute) have passed since the last key press
+            if(timer_elapsed(idle_timer) > INACTIVITY_TIMEOUT)
+            {
+                change_rgb_effect(); // Change the RGB effect after 1 minute of inactivity
+                change_animation_timer = timer_read(); // Reset the timer after the change
+                idle = true;
+            }
+        }
+    }
 }
 
 
