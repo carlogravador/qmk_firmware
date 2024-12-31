@@ -20,7 +20,8 @@ enum custom_keycodes
     RGB_EFFECT_MATRIX_SOLID_REACTIVE = SAFE_RANGE,
     RGB_EFFECT_MATRIX_TYPING_HEATMAP,
     RGB_EFFECT_MATRIX_CYCLE_UP_DOWN,
-    RGB_TOGGLE_IDLE_ANIMATION_SLIDESHOW
+    RGB_TOGGLE_IDLE_ANIMATION_SLIDESHOW,
+    RGB_PLAY_ANIMATION_SLIDESHOW_NO_WAIT_TIME
 };
 
 #define INACTIVITY_TIMEOUT                (900 * 1000) // In MS
@@ -31,6 +32,7 @@ enum custom_keycodes
 #define RM_EFF2     RGB_EFFECT_MATRIX_TYPING_HEATMAP
 #define RM_EFF3     RGB_EFFECT_MATRIX_CYCLE_UP_DOWN
 #define RM_TIDL     RGB_TOGGLE_IDLE_ANIMATION_SLIDESHOW
+#define RM_ANWT     RGB_PLAY_ANIMATION_SLIDESHOW_NO_WAIT_TIME
 
 // Define the unwanted modes (to be skipped)
 #define IS_UNWANTED_MODE(mode) ((mode) == RGB_MATRIX_NONE || \
@@ -73,6 +75,7 @@ user_config_t user_config;
 static uint32_t idle_timer = 0;
 static uint32_t change_animation_timer = 0;
 static bool idle = false;
+static bool rgb_enable_animation_slideshow_no_wait_time = false;
 
 static uint8_t current_rgb_mode = RGB_MATRIX_CYCLE_UP_DOWN;           // Start at RGB_MATRIX_CYCLE_UP_DOWN
 
@@ -93,7 +96,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_RGB_EFFECT] = LAYOUT(
         RM_TIDL, RM_EFF1, RM_EFF2, RM_EFF3, XXXXXXX, XXXXXXX,                   RM_TOGG, RM_HUEU, RM_SATU, RM_VALU, RM_SPDU, XXXXXXX,
-        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   RM_NEXT, RM_HUED, RM_SATD, RM_VALD, RM_SPDD, XXXXXXX,
+        RM_ANWT, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   RM_NEXT, RM_HUED, RM_SATD, RM_VALD, RM_SPDD, XXXXXXX,
         XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   RM_PREV, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
         XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
                                    XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX
@@ -127,7 +130,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
     if(record->event.pressed)
     {
         // Reset the idle timer on key press
-        idle_timer = timer_read();
+        idle_timer = timer_read32();
         if(idle)
         {
             rgb_matrix_reload_from_eeprom();
@@ -154,6 +157,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
                 eeconfig_update_user(user_config.raw);
                 break;
 
+            case RGB_PLAY_ANIMATION_SLIDESHOW_NO_WAIT_TIME:
+                rgb_enable_animation_slideshow_no_wait_time = true;
+                // force idle timeout
+                idle_timer = timer_read32() + INACTIVITY_TIMEOUT + 1;
+                break;
+
             default:
                 return true; // Return true to allow normal processing for other keycodes
         }
@@ -177,25 +186,26 @@ void change_rgb_effect(void)
 
 // The function to be called every 10ms in the QMK main loop
 void matrix_scan_user(void) {
-    if(user_config.rgb_enable_idle_animation)
+    if(user_config.rgb_enable_idle_animation || rgb_enable_animation_slideshow_no_wait_time)
     {
+        rgb_enable_animation_slideshow_no_wait_time = false;
         if(idle)
         {
-            if(timer_elapsed(change_animation_timer) > CHANGE_ANIMATION_TIMEOUT)
+            if(timer_elapsed32(change_animation_timer) > CHANGE_ANIMATION_TIMEOUT)
             {
                 // Change the RGB effect every CHANGE_ANIMATION_TIMEOUT when idle is detected
                 change_rgb_effect();
-                change_animation_timer = timer_read(); // Reset the timer after the change
+                change_animation_timer = timer_read32(); // Reset the timer after the change
             }
 
         }
         else
         {
             // Check if 60 seconds (1 minute) have passed since the last key press
-            if(timer_elapsed(idle_timer) > INACTIVITY_TIMEOUT)
+            if(timer_elapsed32(idle_timer) > INACTIVITY_TIMEOUT)
             {
                 change_rgb_effect(); // Change the RGB effect after 1 minute of inactivity
-                change_animation_timer = timer_read(); // Reset the timer after the change
+                change_animation_timer = timer_read32(); // Reset the timer after the change
                 idle = true;
             }
         }
