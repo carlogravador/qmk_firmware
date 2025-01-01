@@ -21,7 +21,8 @@ enum custom_keycodes
     RGB_EFFECT_MATRIX_TYPING_HEATMAP,
     RGB_EFFECT_MATRIX_CYCLE_UP_DOWN,
     RGB_TOGGLE_IDLE_ANIMATION_SLIDESHOW,
-    RGB_PLAY_ANIMATION_SLIDESHOW_NO_WAIT_TIME
+    RGB_PLAY_ANIMATION_SLIDESHOW_NO_WAIT_TIME,
+    RGB_EFFECT_NEW_YEAR_COUNTDOWN
 };
 
 #define INACTIVITY_TIMEOUT                (900 * 1000) // In MS
@@ -33,6 +34,7 @@ enum custom_keycodes
 #define RM_EFF3     RGB_EFFECT_MATRIX_CYCLE_UP_DOWN
 #define RM_TIDL     RGB_TOGGLE_IDLE_ANIMATION_SLIDESHOW
 #define RM_ANWT     RGB_PLAY_ANIMATION_SLIDESHOW_NO_WAIT_TIME
+#define RM_NYCD     RGB_EFFECT_NEW_YEAR_COUNTDOWN
 
 // Define the unwanted modes (to be skipped)
 #define IS_UNWANTED_MODE(mode) ((mode) == RGB_MATRIX_NONE || \
@@ -97,7 +99,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_RGB_EFFECT] = LAYOUT(
         RM_TIDL, RM_EFF1, RM_EFF2, RM_EFF3, XXXXXXX, XXXXXXX,                   RM_TOGG, RM_HUEU, RM_SATU, RM_VALU, RM_SPDU, XXXXXXX,
         RM_ANWT, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   RM_NEXT, RM_HUED, RM_SATD, RM_VALD, RM_SPDD, XXXXXXX,
-        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   RM_PREV, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        RM_NYCD, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   RM_PREV, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
         XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
                                    XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX
     )
@@ -161,6 +163,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
                 rgb_enable_animation_slideshow_no_wait_time = true;
                 // force idle timeout
                 idle_timer = timer_read32() + INACTIVITY_TIMEOUT + 1;
+                break;
+
+            case RGB_EFFECT_NEW_YEAR_COUNTDOWN:
+                rgb_matrix_mode_noeeprom(RGB_MATRIX_CUSTOM_NEW_YEAR_COUNTDOWN);
                 break;
 
             default:
