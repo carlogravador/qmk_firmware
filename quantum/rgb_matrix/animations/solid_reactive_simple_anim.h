@@ -1,6 +1,11 @@
 #ifdef RGB_MATRIX_KEYREACTIVE_ENABLED
 #    ifdef ENABLE_RGB_MATRIX_SOLID_REACTIVE_SIMPLE
 RGB_MATRIX_EFFECT(SOLID_REACTIVE_SIMPLE)
+
+#        ifdef RGB_MATRIX_UNDERGLOW_ENABLED_ON_REACTIVE_EFFECT
+RGB_MATRIX_EFFECT(SOLID_REACTIVE_SIMPLE_WITH_UNDERGLOW)
+#        endif // RGB_MATRIX_UNDERGLOW_ENABLED_ON_REACTIVE_EFFECT
+
 #        ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 
 static hsv_t SOLID_REACTIVE_SIMPLE_math(hsv_t hsv, uint16_t offset) {
@@ -15,6 +20,12 @@ static hsv_t SOLID_REACTIVE_SIMPLE_math(hsv_t hsv, uint16_t offset) {
 bool SOLID_REACTIVE_SIMPLE(effect_params_t* params) {
     return effect_runner_reactive(params, &SOLID_REACTIVE_SIMPLE_math);
 }
+
+#            ifdef RGB_MATRIX_UNDERGLOW_ENABLED_ON_REACTIVE_EFFECT
+bool SOLID_REACTIVE_SIMPLE_WITH_UNDERGLOW(effect_params_t* params) {
+    return effect_runner_reactive_with_underglow(params, &SOLID_REACTIVE_SIMPLE_math);
+}
+#            endif // RGB_MATRIX_UNDERGLOW_ENABLED_ON_REACTIVE_EFFECT
 
 #        endif // RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 #    endif     // ENABLE_RGB_MATRIX_SOLID_REACTIVE_SIMPLE

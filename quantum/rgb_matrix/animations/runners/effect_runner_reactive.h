@@ -26,4 +26,25 @@ bool effect_runner_reactive(effect_params_t* params, reactive_f effect_func) {
     return rgb_matrix_check_finished_leds(led_max);
 }
 
+#ifdef RGB_MATRIX_UNDERGLOW_ENABLED_ON_REACTIVE_EFFECT
+
+void set_underglow_on(void)
+{
+    hsv_t hsv = rgb_matrix_config.hsv;
+    rgb_t rgb = rgb_matrix_hsv_to_rgb(hsv);
+    for(uint8_t i = RGB_UNDERGLOW_INDEX_START; i < RGB_UNDERGLOW_INDEX_COUNT; ++i)
+    {
+        rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
+    }
+}
+
+bool effect_runner_reactive_with_underglow(effect_params_t* params, reactive_f effect_func) {
+    RGB_MATRIX_USE_LIMITS(led_min, led_max);
+
+    set_underglow_on();
+
+    return effect_runner_reactive(params, effect_func);
+}
+#endif // RGB_MATRIX_UNDERGLOW_ENABLED_ON_REACTIVE_EFFECT
+
 #endif // RGB_MATRIX_KEYREACTIVE_ENABLED
