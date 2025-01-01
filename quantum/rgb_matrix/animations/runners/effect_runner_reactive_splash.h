@@ -26,4 +26,17 @@ bool effect_runner_reactive_splash(uint8_t start, effect_params_t* params, react
     return rgb_matrix_check_finished_leds(led_max);
 }
 
+#ifdef RGB_MATRIX_UNDERGLOW_ENABLED_ON_REACTIVE_EFFECT
+
+void set_underglow_on(void);
+
+bool effect_runner_reactive_splash_with_underglow(uint8_t start, effect_params_t* params, reactive_splash_f effect_func) {
+    RGB_MATRIX_USE_LIMITS(led_min, led_max);
+
+    set_underglow_on();
+
+    return effect_runner_reactive_splash(start, params, effect_func);
+}
+#endif // RGB_MATRIX_UNDERGLOW_ENABLED_ON_REACTIVE_EFFECT
+
 #endif // RGB_MATRIX_KEYREACTIVE_ENABLED
