@@ -7,3 +7,6 @@
 # RGB_MATRIX_ENABLE = no
 # RGBLIGHT_ENABLE = yes
 # RGB_MATRIX_CUSTOM_USER = yes
+
+# Enable the LED underglow on reactive effects when the flag is set
+EXTRAFLAGS += -D RGB_MATRIX_UNDERGLOW_ENABLED_ON_REACTIVE_EFFECT
