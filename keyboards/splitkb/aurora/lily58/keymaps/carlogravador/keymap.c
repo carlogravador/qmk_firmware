@@ -89,6 +89,7 @@ static uint32_t inactivity_timer = 0;
 static uint32_t change_animation_timer = 0;
 static bool rgb_play_animation_slideshow = false;
 
+static void refresh_inactivity_timer(void);
 static void play_next_rgb_effect(void);
 static void start_play_animation_slideshow(void);
 static void stop_animation_slideshow(void);
@@ -124,22 +125,27 @@ void keyboard_pre_init_user(void)
     gpio_write_pin_high(LED_CAPS_LOCK_PIN);
 }
 
+void keyboard_post_init_user(void)
+{
+    inactivity_timer = timer_read32();
+}
+
 // Define what happens when the custom key is pressed
 bool process_record_user(uint16_t keycode, keyrecord_t *record)
 {
+
+#if defined(INACTIVITY_TIMEOUT) && defined(CHANGE_ANIMATION_TIMEOUT)
     if(record->event.pressed)
     {
-        if(idle)
-        {
-            inactivity_timer = timer_read32();
-            idle = false;
-        }
+        refresh_inactivity_timer();
 
         if(rgb_play_animation_slideshow)
         {
             stop_animation_slideshow();
         }
     }
+#endif // defined(INACTIVITY_TIMEOUT) && defined(CHANGE_ANIMATION_TIMEOUT)
+
 
     // Add custom behavior for other keycodes if needed
     switch(keycode)
@@ -255,6 +261,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
 
 void housekeeping_task_user(void)
 {
+#if defined(INACTIVITY_TIMEOUT) && defined(CHANGE_ANIMATION_TIMEOUT)
     if(rgb_play_animation_slideshow)
     {
         if(timer_elapsed32(change_animation_timer) > CHANGE_ANIMATION_TIMEOUT)
@@ -264,17 +271,22 @@ void housekeeping_task_user(void)
         }
     }
 
-#if defined(INACTIVITY_TIMEOUT) && defined(CHANGE_ANIMATION_TIMEOUT)
-    if(!idle)
+    if((!idle) && (timer_elapsed32(inactivity_timer) > INACTIVITY_TIMEOUT))
     {
-        if(timer_elapsed32(inactivity_timer) > INACTIVITY_TIMEOUT)
-        {
-            idle = true;
-            start_play_animation_slideshow();
-        }
+        idle = true;
+        start_play_animation_slideshow();
     }
 
 #endif // define(INACTIVITY_TIMEOUT) && define(CHANGE_ANIMATION_TIMEOUT)
+}
+
+static void refresh_inactivity_timer(void)
+{
+    inactivity_timer = timer_read32();
+    if(idle)
+    {
+        idle = false;
+    }
 }
 
 
@@ -296,7 +308,7 @@ static void start_play_animation_slideshow(void)
 {
     rgb_play_animation_slideshow = true;
     // force timeout
-    change_animation_timer = timer_read32() + CHANGE_ANIMATION_TIMEOUT + 1;
+    change_animation_timer = timer_read32() + CHANGE_ANIMATION_TIMEOUT;
 }
 
 
