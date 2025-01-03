@@ -27,9 +27,6 @@ enum custom_keycodes
     KEYCODE_TMUX_VI_MODE,
 };
 
-#define INACTIVITY_TIMEOUT                (900 * 1000) // In MS
-#define CHANGE_ANIMATION_TIMEOUT          (5 * 1000) // In MS
-
 // RGB MODE EFFECTS KEYCODES
 #define RM_EFF1     RGB_SET_EFFECT_MATRIX_SOLID_REACTIVE
 #define RM_EFF2     RGB_SET_EFFECT_MATRIX_SOLID_REACTIVE_SIMPLE
@@ -87,8 +84,14 @@ enum layers
 };
 
 // Timer variable to track inactivity
+static bool idle = false;
+static uint32_t inactivity_timer = 0;
 static uint32_t change_animation_timer = 0;
 static bool rgb_play_animation_slideshow = false;
+
+static void play_next_rgb_effect(void);
+static void start_play_animation_slideshow(void);
+static void stop_animation_slideshow(void);
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_DEFAULT] = LAYOUT(
@@ -126,10 +129,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
 {
     if(record->event.pressed)
     {
+        if(idle)
+        {
+            inactivity_timer = timer_read32();
+            idle = false;
+        }
+
         if(rgb_play_animation_slideshow)
         {
-            rgb_matrix_reload_from_eeprom();
-            rgb_play_animation_slideshow = false;
+            stop_animation_slideshow();
         }
     }
 
@@ -181,9 +189,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
         {
             if(record->event.pressed)
             {
-                rgb_play_animation_slideshow = true;
-                // force timeout
-                change_animation_timer = timer_read32() + CHANGE_ANIMATION_TIMEOUT + 1;
+                start_play_animation_slideshow();
             }
             return false;
         }
@@ -247,7 +253,32 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
     }
 }
 
-static void next_rgb_effect(void)
+void housekeeping_task_user(void)
+{
+    if(rgb_play_animation_slideshow)
+    {
+        if(timer_elapsed32(change_animation_timer) > CHANGE_ANIMATION_TIMEOUT)
+        {
+            play_next_rgb_effect();
+            change_animation_timer = timer_read32(); // Reset the timer after the change
+        }
+    }
+
+#if defined(INACTIVITY_TIMEOUT) && defined(CHANGE_ANIMATION_TIMEOUT)
+    if(!idle)
+    {
+        if(timer_elapsed32(inactivity_timer) > INACTIVITY_TIMEOUT)
+        {
+            idle = true;
+            start_play_animation_slideshow();
+        }
+    }
+
+#endif // define(INACTIVITY_TIMEOUT) && define(CHANGE_ANIMATION_TIMEOUT)
+}
+
+
+static void play_next_rgb_effect(void)
 {
     // Start at RGB_MATRIX_CYCLE_UP_DOWN
     static uint8_t current_rgb_mode = RGB_MATRIX_CYCLE_UP_DOWN;
@@ -261,16 +292,18 @@ static void next_rgb_effect(void)
     rgb_matrix_mode_noeeprom(current_rgb_mode);
 }
 
-void housekeeping_task_user(void)
+static void start_play_animation_slideshow(void)
 {
-    if(rgb_play_animation_slideshow)
-    {
-        if(timer_elapsed32(change_animation_timer) > CHANGE_ANIMATION_TIMEOUT)
-        {
-            next_rgb_effect();
-            change_animation_timer = timer_read32(); // Reset the timer after the change
-        }
-    }
+    rgb_play_animation_slideshow = true;
+    // force timeout
+    change_animation_timer = timer_read32() + CHANGE_ANIMATION_TIMEOUT + 1;
+}
+
+
+static void stop_animation_slideshow(void)
+{
+    rgb_matrix_reload_from_eeprom();
+    rgb_play_animation_slideshow = false;
 }
 
 
