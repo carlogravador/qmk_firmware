@@ -80,7 +80,7 @@ enum layers
 {
     _DEFAULT = 0,
     _RAISE,
-    _RGB_EFFECT
+    _RGB_EFFECT_AND_MEDIA
 };
 
 // Timer variable to track inactivity
@@ -105,16 +105,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_RAISE] = LAYOUT(
         KC_F1  , KC_F2  , KC_F3  , KC_F4  , KC_F5  , KC_F6  ,                   XXXXXXX, XXXXXXX, XXXXXXX, KC_MINS, KC_EQL , KC_DEL ,
         KC_F7  , KC_F8  , KC_F9  , KC_F10 , KC_F11 , KC_F12 ,                   XXXXXXX, KC_HOME, KC_END , KC_LBRC, KC_RBRC, XXXXXXX,
-        KC_CAPS, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   KC_LEFT, KC_DOWN, KC_UP  , KC_RGHT, XXXXXXX, XXXXXXX ,
-        _______, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_TVMO, KC_TPTB, KC_TNTB, KC_VPTB, KC_VNTB, XXXXXXX, MO(2)  ,
-                                   _______, _______, _______, _______, _______, _______, _______, _______
+        KC_CAPS, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   KC_LEFT, KC_DOWN, KC_UP  , KC_RGHT, XXXXXXX, XXXXXXX,
+        _______, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_TVMO, KC_TPTB, KC_TNTB, KC_VPTB, KC_VNTB, XXXXXXX, _______,
+                                   _______, _______, MO(2)  , _______, _______, _______, KC_BRID, KC_BRIU
     ),
-    [_RGB_EFFECT] = LAYOUT(
+    [_RGB_EFFECT_AND_MEDIA] = LAYOUT(
         RM_ANWT, RM_EFF1, RM_EFF2, RM_EFF3, RM_EFF4, RM_EFF5,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
         RM_TOGG, RM_NEXT, RM_HUEU, RM_SATU, RM_VALU, RM_SPDU,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
         XXXXXXX, RM_PREV, RM_HUED, RM_SATD, RM_VALD, RM_SPDD,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_TPTB, KC_TNTB, XXXXXXX, XXXXXXX,
-                                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_MUTE, KC_MPRV, KC_MNXT, KC_MPLY, XXXXXXX,
+                                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_VOLD, KC_VOLU
     )
 };
 
