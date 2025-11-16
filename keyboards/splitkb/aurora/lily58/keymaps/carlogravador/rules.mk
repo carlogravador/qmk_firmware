@@ -10,3 +10,6 @@
 
 # Enable the LED underglow on reactive effects when the flag is set
 EXTRAFLAGS += -D RGB_MATRIX_UNDERGLOW_ENABLED_ON_REACTIVE_EFFECT
+OLED_ENABLE = yes
+OLED_DRIVER = ssd1306
+OLED_TRANSPORT = i2c

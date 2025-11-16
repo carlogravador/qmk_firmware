@@ -121,8 +121,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // Disable MCU LED. It is used as CAPSLOCK indicator instead. See config.h
 void keyboard_pre_init_user(void)
 {
-    gpio_set_pin_output(LED_CAPS_LOCK_PIN);
-    gpio_write_pin_high(LED_CAPS_LOCK_PIN);
+    gpio_set_pin_output(24);
+    gpio_write_pin_high(24);
 }
 
 void keyboard_post_init_user(void)

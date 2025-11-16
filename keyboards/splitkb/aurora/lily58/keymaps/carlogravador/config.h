@@ -1,9 +1,5 @@
 #pragma once
 
-// MCU LED AS CAPSLOCK INDICATOR
-#define LED_CAPS_LOCK_PIN    24
-#define LED_PIN_ON_STATE     0
-
 #ifdef RGB_MATRIX_ENABLE
 
 #define INACTIVITY_TIMEOUT                (900 * 1000) // In MS
