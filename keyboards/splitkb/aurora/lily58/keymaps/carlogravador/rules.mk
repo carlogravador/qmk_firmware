@@ -13,3 +13,14 @@ EXTRAFLAGS += -D RGB_MATRIX_UNDERGLOW_ENABLED_ON_REACTIVE_EFFECT
 OLED_ENABLE = yes
 OLED_DRIVER = ssd1306
 OLED_TRANSPORT = i2c
+WPM_ENABLE = yes
+LTO_ENABLE = yes
+
+
+SRC +=  ./../../../../../keyboards/lily58/lib/layer_state_reader.c     \
+        ./../../../../../keyboards/lily58/lib/rgb_state_reader.c       \
+        ./../../../../../keyboards/lily58/lib/logo_reader.c            \
+        ./../../../../../keyboards/lily58/lib/keylogger.c              \
+        # ./lib/mode_icon_reader.c \
+        # ./lib/host_led_state_reader.c \
+        # ./lib/timelogger.c \

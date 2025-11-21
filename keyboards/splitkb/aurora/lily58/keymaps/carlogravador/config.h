@@ -1,5 +1,11 @@
 #pragma once
 
+#define MASTER_LEFT
+
+#define TAPPING_FORCE_HOLD
+#define TAPPING_TERM 200
+#define SPLIT_WPM_ENABLE
+
 #ifdef RGB_MATRIX_ENABLE
 
 #define INACTIVITY_TIMEOUT                (900 * 1000) // In MS
