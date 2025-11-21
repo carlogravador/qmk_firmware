@@ -260,20 +260,74 @@ static void render_anim(void) {
     }
 }
 
+// forward declare from aurora/lily58/lily58.c
+void render_space(void);
+void render_mod_status_gui_alt(uint8_t modifiers);
+void render_mod_status_ctrl_shift(uint8_t modifiers);
+void render_kb_LED_state(void);
+
+void render_custom_logo(void)
+{
+    static const char PROGMEM raw_logo[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0x1c, 0x02, 0x05, 0x02, 0x24, 0x04, 0x04, 0x02, 0xa9, 0x1e, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0x90, 0x08, 0x18, 0x60, 0x10, 0x08, 0x04, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x0e, 0x82, 0x7c, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x04, 0x0c, 0x10, 0x10, 0x20, 0x20, 0x20, 0x28, 0x3e, 0x1c, 0x20, 0x20, 0x3e, 0x0f, 0x11, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+    oled_write_raw_P(raw_logo, sizeof(raw_logo));
+    oled_set_cursor(0, 3);
+    render_space();
+}
+
+void render_wpm_counter(void)
+{
+    uint8_t n = get_current_wpm();
+    char    wpm_counter[4];
+    wpm_counter[3] = '\0';
+    wpm_counter[2] = '0' + n % 10;
+    wpm_counter[1] = (n /= 10) % 10 ? '0' + (n) % 10 : (n / 10) % 10 ? '0' : ' ';
+    wpm_counter[0] = n / 10 ? '0' + n / 10 : ' ';
+    oled_write_P(PSTR("WPM: "), false);
+    oled_write(wpm_counter, false);
+    oled_set_cursor(0, 6);
+}
+
+void render_custom_layer_state(void)
+{
+    static const char PROGMEM default_layer[] = {
+        0x20, 0x97, 0x98, 0x99, 0x20,
+        0x20, 0xb7, 0xb8, 0xb9, 0x20,
+        0x20, 0xd7, 0xd8, 0xd9, 0x20, 0};
+    static const char PROGMEM raise_layer[] = {
+        0x20, 0x94, 0x95, 0x96, 0x20,
+        0x20, 0xb4, 0xb5, 0xb6, 0x20,
+        0x20, 0xd4, 0xd5, 0xd6, 0x20, 0};
+    static const char PROGMEM rgb_effect_and_media_layer[] = {
+        0x20, 0x9a, 0x9b, 0x9c, 0x20,
+        0x20, 0xba, 0xbb, 0xbc, 0x20,
+        0x20, 0xda, 0xdb, 0xdc, 0x20, 0};
+
+    switch (get_highest_layer(layer_state | default_layer_state)) {
+        case _RGB_EFFECT_AND_MEDIA:
+            oled_write_P(rgb_effect_and_media_layer, false);
+            break;
+        case _RAISE:
+            oled_write_P(raise_layer, false);
+            break;
+        default:
+            oled_write_P(default_layer, false);
+    }
+}
+
 bool oled_task_user(void) {
     if (is_keyboard_master()) {
-        oled_set_cursor(0,1);
-        uint8_t n = get_current_wpm();
-        char    wpm_counter[4];
-        wpm_counter[3] = '\0';
-        wpm_counter[2] = '0' + n % 10;
-        wpm_counter[1] = (n /= 10) % 10 ? '0' + (n) % 10 : (n / 10) % 10 ? '0' : ' ';
-        wpm_counter[0] = n / 10 ? '0' + n / 10 : ' ';
-        oled_write_P(PSTR("WPM: "), false);
-        oled_write(wpm_counter, false);
-        oled_set_cursor(0,3); {
-            oled_write_ln(read_layer_state(), false);
-        }
+        render_custom_logo();
+        render_wpm_counter();
+        render_space();
+        render_custom_layer_state();
+        render_space();
+        render_mod_status_gui_alt(get_mods()|get_oneshot_mods());
+        render_mod_status_ctrl_shift(get_mods()|get_oneshot_mods());
+        render_kb_LED_state();
     } else {
         render_anim();
     }
