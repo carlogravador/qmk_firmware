@@ -2,6 +2,7 @@
 
 #define MASTER_LEFT
 
+#define WPM_SAMPLE_SECONDS 1
 #define TAPPING_FORCE_HOLD
 #define TAPPING_TERM 200
 #define SPLIT_WPM_ENABLE
