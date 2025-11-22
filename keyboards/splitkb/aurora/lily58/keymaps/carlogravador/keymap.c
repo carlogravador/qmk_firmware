@@ -164,9 +164,7 @@ uint32_t master_anim_sleep = 0;
 uint8_t master_current_idle_frame = 0;
 uint8_t master_current_tap_frame = 0;
 
-//
 // Render right OLED display animation
-//
 static void render_anim(void) {
 
   // Idle animation
@@ -361,6 +359,24 @@ void render_custom_layer_state(void)
     }
 }
 
+void render_rgb_info(void)
+{
+    oled_clear();
+    oled_write_P(PSTR("ST:"), false);
+    oled_write(get_u8_str(rgblight_is_enabled(), ' '), false);
+    oled_write_P(PSTR(" MO:"), false);
+    oled_write(get_u8_str(rgblight_get_mode(), ' '), false);
+    oled_write_P(PSTR(" HU:"), false);
+    oled_write(get_u8_str(rgblight_get_hue(), ' '), false);
+    oled_set_cursor(0, 2);
+    oled_write_P(PSTR("SA:"), false);
+    oled_write(get_u8_str(rgblight_get_sat(), ' '), false);
+    oled_write_P(PSTR(" VA:"), false);
+    oled_write(get_u8_str(rgblight_get_val(), ' '), false);
+    oled_write_P(PSTR(" SP:"), false);
+    oled_write(get_u8_str(rgblight_get_speed(), ' '), false);
+}
+
 bool oled_task_user(void) {
     if (is_keyboard_master()) {
         render_custom_logo();
@@ -372,7 +388,14 @@ bool oled_task_user(void) {
         render_mod_status_ctrl_shift(get_mods()|get_oneshot_mods());
         render_kb_LED_state();
     } else {
-        render_anim();
+        if(_RGB_EFFECT_AND_MEDIA == get_highest_layer(layer_state))
+        {
+            render_rgb_info();
+        }
+        else
+        {
+            render_anim();
+        }
     }
     return false;
 }
